@@ -1,44 +1,32 @@
-# Halcyon — audio visualizer
+# Halcyon — Audio Visualizer
 
-A black-field music visualizer. Use your microphone or drop a track — animated
-bars, orbits, and halos react to the sound in real time.
+A black-field music visualizer. Use your microphone or drop a track — animated bars, orbits, and halos react to the sound in real time.
 
-Author: Trex-blue (trexblueofficial@gmail.com)
+**Live:** https://trexblue5599-cric.github.io/visualizer-core-js/
 
-## Running
+## Features
 
-```bash
-npm install
-npm run dev
-```
-
-Open the printed localhost URL (default http://localhost:5173).
+- 3 visual modes — **Spire** (bars), **Orbit** (radial), **Halo** (blob)
+- 4 color themes — Azure, Ember, Verdant, Mono
+- Microphone input — visualize live audio
+- File playback — drag & drop or upload
+- Sensitivity + volume sliders
+- Peak-hold decay
+- Idle animation when silent
+- Fullscreen mode
+- Preferences saved to localStorage
 
 ## Controls
 
-- Space — play/pause
-- F — fullscreen
-- 1 / 2 / 3 — switch visual mode (spire / orbit / halo)
-- Esc — stop current source
-- Drag and drop an audio file anywhere on the screen, or use the Upload button
+| Key | Action |
+|-----|--------|
+| `Space` | Play / pause |
+| `F` | Fullscreen |
+| `1` | Spire mode |
+| `2` | Orbit mode |
+| `3` | Halo mode |
+| `Esc` | Stop current source |
 
-## Project layout
+Drag and drop an audio file anywhere on the screen, or use the Upload button.
 
-- `src/types.ts` — shared types
-- `src/themes.ts` — color palettes
-- `src/spectrum.ts` — FFT → bar mapping, smoothing, peak decay, idle animation
-- `src/audioEngine.ts` — Web Audio: mic input, file playback, analyser
-- `src/draw.ts` — canvas renderers (spire / orbit / halo)
-- `src/usePersistedPrefs.ts` — saves mode/theme/sensitivity/volume to localStorage
-- `src/formatTime.ts` — mm:ss helper
-- `src/Hud.tsx` — controls: transport, seek bar, mic/upload, selectors, sliders
-- `src/VisualizerApp.tsx` — wires everything together (render loop, keyboard
-  shortcuts, fullscreen, drag-and-drop)
-- `src/main.tsx` / `index.html` — app entry point
-
-## Notes
-
-- Starting the mic or a file happens inside a button click, since browsers
-  require a user gesture before granting audio access.
-- Preferences persist across reloads; playback state does not (by design).
-- No backend, no accounts, no external services — everything runs client-side.
+## Project structure
