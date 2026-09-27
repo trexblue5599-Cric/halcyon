@@ -2,7 +2,7 @@
 
 A black-field music visualizer. Use your microphone or drop a track — animated bars, orbits, and halos react to the sound in real time.
 
-**Live:** https://trexblue5599-cric.github.io/visualizer-core-js/
+**Live:** https://trexblue5599-cric.github.io/halcyon/
 
 ## Features
 
