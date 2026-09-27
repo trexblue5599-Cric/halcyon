@@ -11,11 +11,11 @@ const MODES = ["spire", "orbit", "halo"];
 function init() {
   const root = document.getElementById("app");
   if (!root) {
-    document.body.innerHTML = "<p style='color:red;padding:20px'>Error: #app not found</p>";
+    document.body.innerHTML = "<p style='color:red;padding:20px;font-size:20px'>ERROR: #app not found</p>";
     return;
   }
 
-  root.style.cssText = "position:fixed;inset:0;background:#050506;overflow:hidden";
+  root.style.cssText = "position:fixed;top:0;left:0;width:100vw;height:100vh;background:#050506;overflow:hidden";
 
   const canvas = document.createElement("canvas");
   canvas.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;display:block";
