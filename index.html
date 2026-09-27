@@ -2,84 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Halcyon Test</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#050506" />
+  <title>Halcyon</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
-<body style="margin:0;background:#111;color:#fff;font-family:monospace;padding:20px;font-size:16px;">
-  <div id="log">Testing imports...</div>
-
-  <script type="module">
-    const log = document.getElementById("log");
-    const lines = [];
-    function add(msg, ok) {
-      lines.push((ok ? "✅ " : "❌ ") + msg);
-      log.innerHTML = lines.join("<br>");
-    }
-
-    try {
-      const m = await import("./src/constants.js");
-      add("constants.js — BAR_COUNT = " + m.BAR_COUNT, true);
-    } catch (e) {
-      add("constants.js FAILED: " + e.message, false);
-    }
-
-    try {
-      const m = await import("./src/formatTime.js");
-      add("formatTime.js OK — " + (typeof m.formatTime), true);
-    } catch (e) {
-      add("formatTime.js FAILED: " + e.message, false);
-    }
-
-    try {
-      const m = await import("./src/themes.js");
-      add("themes.js OK — " + (m.THEMES ? m.THEMES.length + " themes" : "no THEMES"), true);
-    } catch (e) {
-      add("themes.js FAILED: " + e.message, false);
-    }
-
-    try {
-      const m = await import("./src/preferences.js");
-      add("preferences.js OK", true);
-    } catch (e) {
-      add("preferences.js FAILED: " + e.message, false);
-    }
-
-    try {
-      const m = await import("./src/spectrum.js");
-      add("spectrum.js OK", true);
-    } catch (e) {
-      add("spectrum.js FAILED: " + e.message, false);
-    }
-
-    try {
-      const m = await import("./src/audioEngine.js");
-      add("audioEngine.js OK", true);
-    } catch (e) {
-      add("audioEngine.js FAILED: " + e.message, false);
-    }
-
-    try {
-      const m = await import("./src/draw.js");
-      add("draw.js OK", true);
-    } catch (e) {
-      add("draw.js FAILED: " + e.message, false);
-    }
-
-    try {
-      const m = await import("./src/hud.js");
-      add("hud.js OK", true);
-    } catch (e) {
-      add("hud.js FAILED: " + e.message, false);
-    }
-
-    try {
-      const m = await import("./src/app.js");
-      add("app.js OK", true);
-    } catch (e) {
-      add("app.js FAILED: " + e.message, false);
-    }
-
-    add("=== DONE ===", true);
-  </script>
+<body>
+  <div id="app"></div>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
