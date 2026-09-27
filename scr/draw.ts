@@ -1,17 +1,6 @@
-import type { Theme, VizMode } from "./types";
-import { colorForEnergy } from "./themes";
+import { colorForEnergy } from "./themes.js";
 
-export type DrawFrame = {
-  ctx: CanvasRenderingContext2D;
-  width: number;
-  height: number;
-  bars: Float32Array;   // smoothed 0-1 values, one per bar
-  peaks: Float32Array;  // decaying peak-hold values, same length as bars
-  theme: Theme;
-  mode: VizMode;
-};
-
-export function drawVisualizer(frame: DrawFrame): void {
+export function drawVisualizer(frame) {
   const { ctx, width, height, theme } = frame;
   ctx.fillStyle = theme.background;
   ctx.fillRect(0, 0, width, height);
@@ -30,7 +19,7 @@ export function drawVisualizer(frame: DrawFrame): void {
 }
 
 /** Vertical bars rising from the bottom, glowing tips, symmetric peak markers. */
-function drawSpire(frame: DrawFrame): void {
+function drawSpire(frame) {
   const { ctx, width, height, bars, peaks, theme } = frame;
   const n = bars.length;
   const gap = 3;
@@ -39,8 +28,8 @@ function drawSpire(frame: DrawFrame): void {
   const maxHeight = height * 0.62;
 
   for (let i = 0; i < n; i++) {
-    const value = bars[i] ?? 0;
-    const peak = peaks[i] ?? 0;
+    const value = bars[i] || 0;
+    const peak = peaks[i] || 0;
     const x = i * (barWidth + gap);
     const barHeight = value * maxHeight;
     const color = colorForEnergy(theme, value);
@@ -60,7 +49,7 @@ function drawSpire(frame: DrawFrame): void {
 }
 
 /** Bars arranged radially around a center point, radius modulated by energy. */
-function drawOrbit(frame: DrawFrame): void {
+function drawOrbit(frame) {
   const { ctx, width, height, bars, theme } = frame;
   const n = bars.length;
   const cx = width / 2;
@@ -69,7 +58,7 @@ function drawOrbit(frame: DrawFrame): void {
   const maxExtra = Math.min(width, height) * 0.28;
 
   for (let i = 0; i < n; i++) {
-    const value = bars[i] ?? 0;
+    const value = bars[i] || 0;
     const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
     const barLength = innerRadius + value * maxExtra;
 
@@ -100,7 +89,7 @@ function drawOrbit(frame: DrawFrame): void {
 }
 
 /** A single smooth closed curve whose radius follows the spectrum — soft blob/halo look. */
-function drawHalo(frame: DrawFrame): void {
+function drawHalo(frame) {
   const { ctx, width, height, bars, theme } = frame;
   const n = bars.length;
   const cx = width / 2;
@@ -108,19 +97,22 @@ function drawHalo(frame: DrawFrame): void {
   const baseRadius = Math.min(width, height) * 0.26;
   const maxExtra = Math.min(width, height) * 0.22;
 
-  const points: { x: number; y: number }[] = [];
+  const points = [];
   for (let i = 0; i <= n; i++) {
-    const value = bars[i % n] ?? 0;
+    const value = bars[i % n] || 0;
     const angle = (i / n) * Math.PI * 2 - Math.PI / 2;
     const r = baseRadius + value * maxExtra;
     points.push({ x: cx + Math.cos(angle) * r, y: cy + Math.sin(angle) * r });
   }
 
   ctx.beginPath();
-  ctx.moveTo((points[0]!.x + points[points.length - 2]!.x) / 2, (points[0]!.y + points[points.length - 2]!.y) / 2);
+  ctx.moveTo(
+    (points[0].x + points[points.length - 2].x) / 2,
+    (points[0].y + points[points.length - 2].y) / 2
+  );
   for (let i = 0; i < points.length - 1; i++) {
-    const curr = points[i]!;
-    const next = points[i + 1]!;
+    const curr = points[i];
+    const next = points[i + 1];
     const midX = (curr.x + next.x) / 2;
     const midY = (curr.y + next.y) / 2;
     ctx.quadraticCurveTo(curr.x, curr.y, midX, midY);
@@ -138,8 +130,8 @@ function drawHalo(frame: DrawFrame): void {
   ctx.shadowBlur = 0;
 }
 
-function average(values: Float32Array): number {
+function average(values) {
   let sum = 0;
-  for (let i = 0; i < values.length; i++) sum += values[i] ?? 0;
+  for (let i = 0; i < values.length; i++) sum += values[i] || 0;
   return values.length ? sum / values.length : 0;
 }
