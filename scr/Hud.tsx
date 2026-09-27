@@ -1,179 +1,262 @@
-import { useEffect, useRef, useState } from "react";
-import { formatTime } from "./formatTime";
-import { THEMES } from "./themes";
-import type { VizMode } from "./types";
-
-type HudProps = {
-  mode: VizMode;
-  onModeChange: (m: VizMode) => void;
-  themeIndex: number;
-  onThemeChange: (i: number) => void;
-  sensitivity: number;
-  onSensitivityChange: (v: number) => void;
-  volume: number;
-  onVolumeChange: (v: number) => void;
-  isFile: boolean;
-  isMic: boolean;
-  playing: boolean;
-  currentTime: number;
-  duration: number;
-  fileName: string | null;
-  error: string | null;
-  fullscreen: boolean;
-  onPlayPause: () => void;
-  onStop: () => void;
-  onSeek: (t: number) => void;
-  onStartMic: () => void;
-  onFileSelected: (file: File) => void;
-  onFullscreenToggle: () => void;
-};
+import { formatTime } from "./formatTime.js";
+import { THEMES } from "./themes.js";
 
 const HIDE_DELAY_MS = 3000;
 
-export function Hud(props: HudProps) {
-  const [visible, setVisible] = useState(true);
-  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+/**
+ * Builds the HUD (control panel) into the given container element.
+ * Returns an object with an `update()` method to refresh live values
+ * and a `setVisible()` toggle for the fade-out behavior.
+ */
+export function createHud(container, handlers) {
+  // Root footer
+  const footer = document.createElement("footer");
+  footer.className = "hud hud-visible";
 
-  const idle = !props.isFile && !props.isMic;
+  // Panel
+  const panel = document.createElement("div");
+  panel.className = "hud-panel";
 
-  const bumpVisible = () => {
-    setVisible(true);
-    if (hideTimer.current) clearTimeout(hideTimer.current);
-    if (!idle) {
-      hideTimer.current = setTimeout(() => setVisible(false), HIDE_DELAY_MS);
+  // Error line
+  const errorEl = document.createElement("p");
+  errorEl.className = "hud-error";
+  errorEl.style.display = "none";
+  panel.appendChild(errorEl);
+
+  // --- Row 1: transport + status ---
+  const row1 = document.createElement("div");
+  row1.className = "hud-row";
+
+  const playBtn = mkBtn("Play", "Play / pause");
+  const stopBtn = mkBtn("Stop", "Stop current source");
+  playBtn.disabled = true;
+  stopBtn.disabled = true;
+
+  const statusWrap = document.createElement("div");
+  statusWrap.className = "hud-status";
+
+  const statusText = document.createElement("p");
+  statusText.className = "hud-status-text";
+  statusText.textContent = "Drop a track, or use the buttons below";
+  statusWrap.appendChild(statusText);
+
+  const seekWrap = document.createElement("div");
+  seekWrap.className = "hud-seek";
+  seekWrap.style.display = "none";
+
+  const curTime = document.createElement("span");
+  curTime.textContent = "0:00";
+
+  const seekInput = document.createElement("input");
+  seekInput.type = "range";
+  seekInput.min = "0";
+  seekInput.max = "0";
+  seekInput.step = "0.01";
+  seekInput.value = "0";
+  seekInput.setAttribute("aria-label", "Seek");
+
+  const durTime = document.createElement("span");
+  durTime.textContent = "0:00";
+
+  seekWrap.append(curTime, seekInput, durTime);
+  statusWrap.appendChild(seekWrap);
+
+  const micBtn = mkBtn("Mic", "Microphone");
+  const uploadBtn = mkBtn("Upload", "Upload track");
+  const fullBtn = mkBtn("Full", "Toggle fullscreen");
+
+  const fileInput = document.createElement("input");
+  fileInput.type = "file";
+  fileInput.accept = "audio/*";
+  fileInput.style.display = "none";
+
+  row1.append(playBtn, stopBtn, statusWrap, micBtn, uploadBtn, fileInput, fullBtn);
+
+  // --- Row 2: sliders + selectors ---
+  const row2 = document.createElement("div");
+  row2.className = "hud-row";
+
+  const sensLabel = mkSlider("Sensitivity", 0.4, 2.4, 0.01, 1.15);
+  const volLabel = mkSlider("Volume", 0, 1, 0.01, 0.85);
+
+  const modeSelect = document.createElement("select");
+  modeSelect.className = "hud-select";
+  modeSelect.setAttribute("aria-label", "Visual mode");
+  [
+    ["spire", "Spire"],
+    ["orbit", "Orbit"],
+    ["halo", "Halo"],
+  ].forEach(([v, label]) => {
+    const o = document.createElement("option");
+    o.value = v;
+    o.textContent = label;
+    modeSelect.appendChild(o);
+  });
+
+  const themeSelect = document.createElement("select");
+  themeSelect.className = "hud-select";
+  themeSelect.setAttribute("aria-label", "Color theme");
+  THEMES.forEach((t, i) => {
+    const o = document.createElement("option");
+    o.value = String(i);
+    o.textContent = t.name;
+    themeSelect.appendChild(o);
+  });
+
+  row2.append(sensLabel.label, volLabel.label, modeSelect, themeSelect);
+
+  panel.append(row1, row2);
+  footer.appendChild(panel);
+  container.appendChild(footer);
+
+  // --- Event wiring ---
+  playBtn.addEventListener("click", () => handlers.onPlayPause());
+  stopBtn.addEventListener("click", () => handlers.onStop());
+  micBtn.addEventListener("click", () => handlers.onStartMic());
+  fullBtn.addEventListener("click", () => handlers.onFullscreenToggle());
+  uploadBtn.addEventListener("click", () => fileInput.click());
+
+  fileInput.addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) handlers.onFileSelected(file);
+    e.target.value = "";
+  });
+
+  seekInput.addEventListener("input", (e) => {
+    handlers.onSeek(Number(e.target.value));
+  });
+
+  sensLabel.input.addEventListener("input", (e) => {
+    handlers.onSensitivityChange(Number(e.target.value));
+  });
+
+  volLabel.input.addEventListener("input", (e) => {
+    handlers.onVolumeChange(Number(e.target.value));
+  });
+
+  modeSelect.addEventListener("change", (e) => {
+    handlers.onModeChange(e.target.value);
+  });
+
+  themeSelect.addEventListener("change", (e) => {
+    handlers.onThemeChange(Number(e.target.value));
+  });
+
+  // --- Auto-hide on idle ---
+  let hideTimer = null;
+  let isIdle = true;
+
+  function bumpVisible() {
+    footer.classList.remove("hud-hidden");
+    footer.classList.add("hud-visible");
+    if (hideTimer) clearTimeout(hideTimer);
+    if (!isIdle) {
+      hideTimer = setTimeout(() => {
+        footer.classList.remove("hud-visible");
+        footer.classList.add("hud-hidden");
+      }, HIDE_DELAY_MS);
     }
+  }
+
+  window.addEventListener("mousemove", bumpVisible);
+  window.addEventListener("touchstart", bumpVisible);
+  bumpVisible();
+
+  // --- Public API ---
+  return {
+    /**
+     * Called every state change from app.js.
+     * state = { isFile, isMic, playing, currentTime, duration,
+     *           fileName, error, fullscreen, mode, themeIndex,
+     *           sensitivity, volume }
+     */
+    update(state) {
+      isIdle = !state.isFile && !state.isMic;
+
+      // Error
+      if (state.error) {
+        errorEl.textContent = state.error;
+        errorEl.style.display = "block";
+      } else {
+        errorEl.style.display = "none";
+      }
+
+      // Status text
+      let status;
+      if (state.error) status = state.error;
+      else if (state.isMic) status = "Live input";
+      else if (state.fileName) status = state.fileName;
+      else status = "Drop a track, or use the buttons below";
+      statusText.textContent = status;
+
+      // Buttons
+      playBtn.disabled = !state.isFile;
+      playBtn.textContent = state.playing ? "Pause" : "Play";
+      stopBtn.disabled = isIdle;
+      fullBtn.textContent = state.fullscreen ? "Exit" : "Full";
+
+      // Seek
+      if (state.isFile) {
+        seekWrap.style.display = "flex";
+        seekInput.max = String(state.duration || 0);
+        seekInput.value = String(Math.min(state.currentTime, state.duration));
+        curTime.textContent = formatTime(state.currentTime);
+        durTime.textContent = formatTime(state.duration);
+      } else {
+        seekWrap.style.display = "none";
+      }
+
+      // Volume slider only when not mic
+      volLabel.label.style.display = state.isMic ? "none" : "flex";
+
+      // Sliders + selects
+      if (document.activeElement !== sensLabel.input) {
+        sensLabel.input.value = String(state.sensitivity);
+      }
+      if (document.activeElement !== volLabel.input) {
+        volLabel.input.value = String(state.volume);
+      }
+      if (document.activeElement !== modeSelect) {
+        modeSelect.value = state.mode;
+      }
+      if (document.activeElement !== themeSelect) {
+        themeSelect.value = String(state.themeIndex);
+      }
+
+      // Re-check idle to trigger hide behavior
+      bumpVisible();
+    },
+
+    setFullscreen(isFull) {
+      fullBtn.textContent = isFull ? "Exit" : "Full";
+    },
   };
+}
 
-  useEffect(() => {
-    bumpVisible();
-    window.addEventListener("mousemove", bumpVisible);
-    window.addEventListener("touchstart", bumpVisible);
-    return () => {
-      window.removeEventListener("mousemove", bumpVisible);
-      window.removeEventListener("touchstart", bumpVisible);
-      if (hideTimer.current) clearTimeout(hideTimer.current);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idle]);
+/* ── helpers ── */
 
-  const status = props.error
-    ? props.error
-    : props.isMic
-      ? "Live input"
-      : props.fileName ?? "Drop a track, or use the buttons below";
+function mkBtn(text, aria) {
+  const b = document.createElement("button");
+  b.className = "icon-btn";
+  b.textContent = text;
+  b.setAttribute("aria-label", aria);
+  return b;
+}
 
-  return (
-    <footer className={`hud ${visible ? "hud-visible" : "hud-hidden"}`}>
-      <div className="hud-panel">
-        {props.error ? <p className="hud-error">{props.error}</p> : null}
+function mkSlider(labelText, min, max, step, value) {
+  const label = document.createElement("label");
+  label.className = "hud-slider";
 
-        <div className="hud-row">
-          <button
-            className="icon-btn"
-            onClick={props.onPlayPause}
-            disabled={!props.isFile}
-            aria-label={props.playing ? "Pause" : "Play"}
-          >
-            {props.playing ? "Pause" : "Play"}
-          </button>
-          <button className="icon-btn" onClick={props.onStop} disabled={idle} aria-label="Stop">
-            Stop
-          </button>
+  const span = document.createElement("span");
+  span.textContent = labelText;
 
-          <div className="hud-status">
-            <p className="hud-status-text">{status}</p>
-            {props.isFile ? (
-              <div className="hud-seek">
-                <span>{formatTime(props.currentTime)}</span>
-                <input
-                  type="range"
-                  min={0}
-                  max={props.duration || 0}
-                  step={0.01}
-                  value={Math.min(props.currentTime, props.duration)}
-                  onChange={(e) => props.onSeek(Number(e.target.value))}
-                  aria-label="Seek"
-                />
-                <span>{formatTime(props.duration)}</span>
-              </div>
-            ) : null}
-          </div>
+  const input = document.createElement("input");
+  input.type = "range";
+  input.min = String(min);
+  input.max = String(max);
+  input.step = String(step);
+  input.value = String(value);
 
-          <button className="icon-btn" onClick={props.onStartMic} aria-label="Microphone">
-            Mic
-          </button>
-          <button className="icon-btn" onClick={() => fileInputRef.current?.click()} aria-label="Upload track">
-            Upload
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="audio/*"
-            style={{ display: "none" }}
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) props.onFileSelected(file);
-              e.target.value = "";
-            }}
-          />
-          <button className="icon-btn" onClick={props.onFullscreenToggle} aria-label="Toggle fullscreen">
-            {props.fullscreen ? "Exit" : "Full"}
-          </button>
-        </div>
-
-        <div className="hud-row">
-          <label className="hud-slider">
-            <span>Sensitivity</span>
-            <input
-              type="range"
-              min={0.4}
-              max={2.4}
-              step={0.01}
-              value={props.sensitivity}
-              onChange={(e) => props.onSensitivityChange(Number(e.target.value))}
-            />
-          </label>
-
-          {!props.isMic ? (
-            <label className="hud-slider">
-              <span>Volume</span>
-              <input
-                type="range"
-                min={0}
-                max={1}
-                step={0.01}
-                value={props.volume}
-                onChange={(e) => props.onVolumeChange(Number(e.target.value))}
-              />
-            </label>
-          ) : null}
-
-          <select
-            className="hud-select"
-            value={props.mode}
-            onChange={(e) => props.onModeChange(e.target.value as VizMode)}
-            aria-label="Visual mode"
-          >
-            <option value="spire">Spire</option>
-            <option value="orbit">Orbit</option>
-            <option value="halo">Halo</option>
-          </select>
-
-          <select
-            className="hud-select"
-            value={props.themeIndex}
-            onChange={(e) => props.onThemeChange(Number(e.target.value))}
-            aria-label="Color theme"
-          >
-            {THEMES.map((t, i) => (
-              <option key={t.id} value={i}>
-                {t.name}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-    </footer>
-  );
+  label.append(span, input);
+  return { label, input };
 }
