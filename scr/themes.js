@@ -1,6 +1,4 @@
-import type { Theme } from "./types";
-
-export const THEMES: Theme[] = [
+export const THEMES = [
   {
     id: "azure",
     name: "Azure",
@@ -40,7 +38,7 @@ export const THEMES: Theme[] = [
 ];
 
 /** Linear-interpolate between two RGB triples, t in [0,1]. */
-export function lerpColor(a: readonly [number, number, number], b: readonly [number, number, number], t: number): string {
+export function lerpColor(a, b, t) {
   const clamped = Math.max(0, Math.min(1, t));
   const r = Math.round(a[0] + (b[0] - a[0]) * clamped);
   const g = Math.round(a[1] + (b[1] - a[1]) * clamped);
@@ -49,7 +47,7 @@ export function lerpColor(a: readonly [number, number, number], b: readonly [num
 }
 
 /** Map an energy value (0-1) to a color across the theme's low/mid/high stops. */
-export function colorForEnergy(theme: Theme, energy: number): string {
+export function colorForEnergy(theme, energy) {
   const e = Math.max(0, Math.min(1, energy));
   if (e < 0.5) return lerpColor(theme.low, theme.mid, e / 0.5);
   return lerpColor(theme.mid, theme.high, (e - 0.5) / 0.5);
