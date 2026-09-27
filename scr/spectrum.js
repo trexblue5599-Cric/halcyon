@@ -4,7 +4,7 @@
  * logarithmic bucket mapping so bass and treble both look proportionate
  * on screen (a linear mapping makes bass dominate visually).
  */
-export function mapToBars(freq: Uint8Array, barCount: number, sensitivity: number): Float32Array {
+export function mapToBars(freq, barCount, sensitivity) {
   const out = new Float32Array(barCount);
   const len = freq.length;
   if (len < 2) return out;
@@ -20,7 +20,7 @@ export function mapToBars(freq: Uint8Array, barCount: number, sensitivity: numbe
     const endBin = Math.min(len, Math.max(startBin + 1, endBinRaw));
 
     let sum = 0;
-    for (let bin = startBin; bin < endBin; bin++) sum += freq[bin] ?? 0;
+    for (let bin = startBin; bin < endBin; bin++) sum += freq[bin] || 0;
     const avg = sum / Math.max(1, endBin - startBin);
 
     // Slightly boost lower bars — raw bass energy reads weaker than it sounds.
@@ -34,7 +34,7 @@ export function mapToBars(freq: Uint8Array, barCount: number, sensitivity: numbe
  * Generates a synthetic, organic-looking "spectrum" for idle/ambient mode,
  * so the visual keeps moving gently when there's no real audio input.
  */
-export function idleSpectrum(barCount: number, time: number): Float32Array {
+export function idleSpectrum(barCount, time) {
   const out = new Float32Array(barCount);
   for (let i = 0; i < barCount; i++) {
     const x = barCount === 1 ? 0 : i / (barCount - 1);
@@ -53,20 +53,20 @@ export function idleSpectrum(barCount: number, time: number): Float32Array {
 }
 
 /** Exponential smoothing toward a target array — avoids jittery bars frame to frame. */
-export function smoothToward(current: Float32Array, target: Float32Array, dt: number, rate: number): void {
+export function smoothToward(current, target, dt, rate) {
   const k = 1 - Math.exp(-dt * rate);
   for (let i = 0; i < current.length; i++) {
-    const c = current[i] ?? 0;
-    const t = target[i] ?? 0;
+    const c = current[i] || 0;
+    const t = target[i] || 0;
     current[i] = c + (t - c) * k;
   }
 }
 
 /** Tracks per-bar peaks that jump up instantly and fall off slowly, for a peak-hold effect. */
-export function decayPeaks(peaks: Float32Array, values: Float32Array, dt: number, fallRate: number): void {
+export function decayPeaks(peaks, values, dt, fallRate) {
   for (let i = 0; i < peaks.length; i++) {
-    const v = values[i] ?? 0;
-    const p = peaks[i] ?? 0;
+    const v = values[i] || 0;
+    const p = peaks[i] || 0;
     peaks[i] = v > p ? v : Math.max(0, p - fallRate * dt);
   }
 }
