@@ -1,26 +1,26 @@
-import type { SourceKind } from "./types";
-
 export class AudioEngine {
-  private ctx: AudioContext | null = null;
-  private analyser: AnalyserNode | null = null;
-  private outputGain: GainNode | null = null;
-  private freqData: Uint8Array | null = null;
+  constructor() {
+    this.ctx = null;
+    this.analyser = null;
+    this.outputGain = null;
+    this.freqData = null;
 
-  private micStream: MediaStream | null = null;
-  private micSource: MediaStreamAudioSourceNode | null = null;
+    this.micStream = null;
+    this.micSource = null;
 
-  audioEl: HTMLAudioElement | null = null;
-  private fileSource: MediaElementAudioSourceNode | null = null;
-  private objectUrl: string | null = null;
+    this.audioEl = null;
+    this.fileSource = null;
+    this.objectUrl = null;
 
-  kind: SourceKind = "idle";
-  private volume = 0.85;
+    this.kind = "idle";
+    this.volume = 0.85;
+  }
 
   /** Lazily create the AudioContext + analyser chain (must happen after a user gesture). */
-  private ensureContext(): AudioContext {
+  ensureContext() {
     if (this.ctx) return this.ctx;
 
-    const Ctor = window.AudioContext ?? (window as any).webkitAudioContext;
+    const Ctor = window.AudioContext || window.webkitAudioContext;
     if (!Ctor) throw new Error("Web Audio is not supported in this browser.");
 
     const ctx = new Ctor({ latencyHint: "interactive" });
@@ -41,7 +41,7 @@ export class AudioEngine {
     return ctx;
   }
 
-  async startMic(): Promise<void> {
+  async startMic() {
     this.stop();
     const ctx = this.ensureContext();
     if (ctx.state === "suspended") await ctx.resume();
@@ -49,14 +49,14 @@ export class AudioEngine {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const source = ctx.createMediaStreamSource(stream);
     // Mic input feeds the analyser only — never the output, to avoid feedback.
-    source.connect(this.analyser!);
+    source.connect(this.analyser);
 
     this.micStream = stream;
     this.micSource = source;
     this.kind = "mic";
   }
 
-  async playFile(file: File): Promise<{ duration: number }> {
+  async playFile(file) {
     this.stop();
     const ctx = this.ensureContext();
     if (ctx.state === "suspended") await ctx.resume();
@@ -66,8 +66,8 @@ export class AudioEngine {
     audio.crossOrigin = "anonymous";
 
     const source = ctx.createMediaElementSource(audio);
-    source.connect(this.analyser!);
-    source.connect(this.outputGain!);
+    source.connect(this.analyser);
+    source.connect(this.outputGain);
 
     await audio.play();
 
@@ -83,31 +83,31 @@ export class AudioEngine {
     });
   }
 
-  togglePlay(): void {
+  togglePlay() {
     if (!this.audioEl) return;
-    if (this.audioEl.paused) void this.audioEl.play();
+    if (this.audioEl.paused) this.audioEl.play();
     else this.audioEl.pause();
   }
 
-  seek(time: number): void {
+  seek(time) {
     if (this.audioEl) this.audioEl.currentTime = time;
   }
 
-  setVolume(v: number): void {
+  setVolume(v) {
     this.volume = Math.max(0, Math.min(1, v));
     if (this.outputGain) this.outputGain.gain.value = this.volume;
   }
 
   /** Pulls the current frequency data. Returns null if there's no active analyser. */
-  getFrequencyData(): Uint8Array | null {
+  getFrequencyData() {
     if (!this.analyser || !this.freqData) return null;
     this.analyser.getByteFrequencyData(this.freqData);
     return this.freqData;
   }
 
-  stop(): void {
-    this.micStream?.getTracks().forEach((t) => t.stop());
-    this.micSource?.disconnect();
+  stop() {
+    if (this.micStream) this.micStream.getTracks().forEach((t) => t.stop());
+    if (this.micSource) this.micSource.disconnect();
     this.micStream = null;
     this.micSource = null;
 
@@ -115,7 +115,7 @@ export class AudioEngine {
       this.audioEl.pause();
       this.audioEl.src = "";
     }
-    this.fileSource?.disconnect();
+    if (this.fileSource) this.fileSource.disconnect();
     this.audioEl = null;
     this.fileSource = null;
     if (this.objectUrl) URL.revokeObjectURL(this.objectUrl);
