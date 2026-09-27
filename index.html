@@ -2,29 +2,19 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#050506" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Halcyon</title>
-  <link rel="stylesheet" href="styles/styles.css" />
 </head>
-<body>
-  <div id="app"></div>
+<body style="margin:0;background:red;">
+  <h1 style="color:white;font-size:40px;padding:40px;">TEST 1 - HTML WORKS</h1>
   <script>
-    window.addEventListener("error", function(e) {
-      document.body.innerHTML = 
-        "<pre style='color:red;padding:20px;font-size:14px;background:#000;white-space:pre-wrap'>" +
-        "ERROR: " + (e.message || "unknown") + "\n" +
-        "FILE: " + (e.filename || "unknown") + "\n" +
-        "LINE: " + (e.lineno || "?") +
-        "</pre>";
-    });
-    window.addEventListener("unhandledrejection", function(e) {
-      document.body.innerHTML = 
-        "<pre style='color:red;padding:20px;font-size:14px;background:#000;white-space:pre-wrap'>" +
-        "PROMISE REJECTION: " + (e.reason ? e.reason.message || e.reason : "unknown") +
-        "</pre>";
-    });
+    document.body.style.background = "blue";
+    document.querySelector("h1").textContent = "TEST 2 - JS WORKS";
   </script>
-  <script type="module" src="src/app.js"></script>
+  <script type="module">
+    import { BAR_COUNT } from "./src/constants.js";
+    document.querySelector("h1").textContent = "TEST 3 - BAR_COUNT = " + BAR_COUNT;
+    document.body.style.background = "green";
+  </script>
 </body>
 </html>
