@@ -9,8 +9,22 @@
 </head>
 <body>
   <div id="app"></div>
-  <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-  <script>eruda.init();</script>
+  <script>
+    window.addEventListener("error", function(e) {
+      document.body.innerHTML = 
+        "<pre style='color:red;padding:20px;font-size:14px;background:#000;white-space:pre-wrap'>" +
+        "ERROR: " + (e.message || "unknown") + "\n" +
+        "FILE: " + (e.filename || "unknown") + "\n" +
+        "LINE: " + (e.lineno || "?") +
+        "</pre>";
+    });
+    window.addEventListener("unhandledrejection", function(e) {
+      document.body.innerHTML = 
+        "<pre style='color:red;padding:20px;font-size:14px;background:#000;white-space:pre-wrap'>" +
+        "PROMISE REJECTION: " + (e.reason ? e.reason.message || e.reason : "unknown") +
+        "</pre>";
+    });
+  </script>
   <script type="module" src="src/app.js"></script>
 </body>
 </html>
