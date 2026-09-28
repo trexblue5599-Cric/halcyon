@@ -6,7 +6,7 @@ import { loadPrefs, savePrefs } from "./preferences.js";
 import { createHud } from "./hud.js";
 import { BAR_COUNT } from "./constants.js";
 
-const MODES = ["spire", "orbit", "halo"];
+const MODES = ["spire", "wave", "rings", "pulse"];
 
 function init() {
   const root = document.getElementById("app");
