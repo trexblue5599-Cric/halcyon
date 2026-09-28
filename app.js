@@ -28,13 +28,17 @@ function init() {
   root.appendChild(dropOverlay);
 
   const landing = document.createElement("div");
-  landing.className = "landing";
-  landing.innerHTML = `
-    <h1>Halcyon</h1>
-    <p>A black-field music visualizer. Drop a track or use your microphone — bars, orbits, and halos react to sound in real time.</p>
-    <button type="button">Start</button>
-  `;
-  root.appendChild(landing);
+landing.className = "landing";
+landing.innerHTML = `
+  <img class="landing-logo" src="assets/logo.png" alt="T-Rex Blue Official" />
+  <h1>Halcyon</h1>
+  <p class="brand-sub">T-Rex Blue Official</p>
+  <div class="divider"></div>
+  <p class="tagline">A real-time audio visualizer. Drop a track or use your microphone — sound shapes light in motion.</p>
+  <button type="button">Enter</button>
+  <p class="contact">Contact · <a href="mailto:trexblueofficial@gmail.com">trexblueofficial@gmail.com</a></p>
+`;
+root.appendChild(landing);
 
   const prefs = loadPrefs();
 
