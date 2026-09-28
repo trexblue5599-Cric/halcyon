@@ -5,6 +5,7 @@ const DEFAULT_PREFS = {
   themeIndex: 0,
   sensitivity: 1.15,
   volume: 0.85,
+  customColor: "#7fb8ff",
 };
 
 export function loadPrefs() {
