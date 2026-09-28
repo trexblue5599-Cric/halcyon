@@ -27,6 +27,17 @@ function init() {
   dropOverlay.innerHTML = "<p>Drop to visualize</p>";
   root.appendChild(dropOverlay);
 
+  // --- NEW: Landing screen ---
+  const landing = document.createElement("div");
+  landing.className = "landing";
+  landing.innerHTML = `
+    <h1>Halcyon</h1>
+    <p>A black-field music visualizer. Drop a track or use your microphone — bars, orbits, and halos react to sound in real time.</p>
+    <button type="button">Start</button>
+  `;
+  root.appendChild(landing);
+  // ---------------------------
+
   const prefs = loadPrefs();
   let mode = MODES[prefs.modeIndex] || "spire";
   let source = "idle";
@@ -103,7 +114,25 @@ function init() {
 
     requestAnimationFrame(tick);
   }
-  requestAnimationFrame(tick);
+
+  // --- NEW: Start logic ---
+  let started = false;
+  function start() {
+    if (started) return;
+    started = true;
+    landing.classList.add("hidden");
+    // Resume audio context on user gesture (needed on iOS/Safari)
+    try { engine.ensureContext(); } catch (e) {}
+    requestAnimationFrame(tick);
+  }
+
+  landing.querySelector("button").addEventListener("click", start);
+
+  // Auto-start if the user drags and drops a file onto the landing screen
+  root.addEventListener("drop", (e) => {
+    if (!started) start();
+  }, { once: true });
+  // -------------------------
 
   function resetSourceState() {
     source = "idle";
@@ -177,6 +206,7 @@ function init() {
     else if (e.key === "Escape" && source !== "idle") { engine.stop(); resetSourceState(); syncHud(); }
   });
 
+  // Existing drag & drop logic (kept intact)
   root.addEventListener("dragover", (e) => {
     e.preventDefault();
     if (!dragOver) { dragOver = true; dropOverlay.style.display = "flex"; }
