@@ -204,8 +204,9 @@ function init() {
     if (e.key === " ") { e.preventDefault(); engine.togglePlay(); }
     else if (e.key === "f" || e.key === "F") toggleFullscreen();
     else if (e.key === "1") { mode = "spire"; prefs.modeIndex = 0; savePrefs(prefs); syncHud(); }
-    else if (e.key === "2") { mode = "orbit"; prefs.modeIndex = 1; savePrefs(prefs); syncHud(); }
-    else if (e.key === "3") { mode = "halo"; prefs.modeIndex = 2; savePrefs(prefs); syncHud(); }
+    else if (e.key === "2") { mode = "wave"; prefs.modeIndex = 1; savePrefs(prefs); syncHud(); }
+    else if (e.key === "3") { mode = "rings"; prefs.modeIndex = 2; savePrefs(prefs); syncHud(); }
+      else if (e.key === "4") { mode = "pulse"; prefs.modeIndex = 3; savePrefs(prefs); syncHud(); }
     else if (e.key === "Escape" && source !== "idle") { engine.stop(); resetSourceState(); syncHud(); }
   });
 
