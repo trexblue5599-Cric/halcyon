@@ -68,7 +68,7 @@ export function createHud(container, handlers) {
 
   const modeSelect = document.createElement("select");
   modeSelect.className = "hud-select";
-  [["spire", "Spire"], ["orbit", "Orbit"], ["halo", "Halo"]].forEach(([v, l]) => {
+  [["spire", "Spire"], ["wave", "Wave"], ["rings", "Rings"], ["pulse", "Pulse"]].forEach(([v, l]) => {
     const o = document.createElement("option");
     o.value = v;
     o.textContent = l;
