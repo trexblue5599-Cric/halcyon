@@ -8,9 +8,18 @@
   <link rel="stylesheet" href="styles/styles.css" />
 </head>
 <body>
+  <!-- Ambient background layer (pure decoration) -->
+  <div id="bg-ambient" aria-hidden="true">
+    <div class="bg-orb bg-orb-a"></div>
+    <div class="bg-orb bg-orb-b"></div>
+    <div class="bg-orb bg-orb-c"></div>
+    <div class="bg-vignette"></div>
+    <div class="bg-grain"></div>
+  </div>
+
   <div id="app"></div>
+
   <script>
-    // Surfaces any load/runtime error visibly instead of a silent black screen.
     window.addEventListener("error", function (e) {
       showBootError(e.message + (e.filename ? " (" + e.filename + ":" + e.lineno + ")" : ""));
     });
