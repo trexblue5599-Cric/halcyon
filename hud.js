@@ -1,7 +1,7 @@
 import { formatTime } from "./formatTime.js";
 import { THEMES } from "./themes.js";
 
-const HIDE_DELAY_MS = 3000;
+const HIDE_DELAY_MS = 4000;
 
 export function createHud(container, handlers) {
   const footer = document.createElement("footer");
@@ -84,7 +84,18 @@ export function createHud(container, handlers) {
     themeSelect.appendChild(o);
   });
 
-  row2.append(sensLabel.label, volLabel.label, modeSelect, themeSelect);
+  // --- NEW: custom colour picker ---
+  const colorWrap = document.createElement("label");
+  colorWrap.className = "hud-color";
+  const colorLabel = document.createElement("span");
+  colorLabel.textContent = "Color";
+  const colorInput = document.createElement("input");
+  colorInput.type = "color";
+  colorInput.value = "#7fb8ff";
+  colorWrap.append(colorLabel, colorInput);
+  // --------------------------------
+
+  row2.append(sensLabel.label, volLabel.label, modeSelect, themeSelect, colorWrap);
   panel.append(row1, row2);
   footer.appendChild(panel);
   container.appendChild(footer);
@@ -104,6 +115,7 @@ export function createHud(container, handlers) {
   volLabel.input.addEventListener("input", (e) => handlers.onVolumeChange(Number(e.target.value)));
   modeSelect.addEventListener("change", (e) => handlers.onModeChange(e.target.value));
   themeSelect.addEventListener("change", (e) => handlers.onThemeChange(Number(e.target.value)));
+  colorInput.addEventListener("input", (e) => handlers.onCustomColorChange(e.target.value));
 
   let hideTimer = null;
   let isIdle = true;
@@ -160,6 +172,7 @@ export function createHud(container, handlers) {
       if (document.activeElement !== volLabel.input) volLabel.input.value = String(state.volume);
       if (document.activeElement !== modeSelect) modeSelect.value = state.mode;
       if (document.activeElement !== themeSelect) themeSelect.value = String(state.themeIndex);
+      if (document.activeElement !== colorInput) colorInput.value = state.customColor;
       bumpVisible();
     },
   };
@@ -186,4 +199,4 @@ function mkSlider(labelText, min, max, step, value) {
   input.value = String(value);
   label.append(span, input);
   return { label, input };
-}
+        }
