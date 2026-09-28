@@ -1,7 +1,7 @@
 import { AudioEngine } from "./audioEngine.js";
 import { mapToBars, idleSpectrum, smoothToward, decayPeaks } from "./spectrum.js";
 import { drawVisualizer } from "./draw.js";
-import { THEMES } from "./themes.js";
+import { THEMES, applyCustomColor } from "./themes.js";
 import { loadPrefs, savePrefs } from "./preferences.js";
 import { createHud } from "./hud.js";
 import { BAR_COUNT } from "./constants.js";
@@ -27,7 +27,6 @@ function init() {
   dropOverlay.innerHTML = "<p>Drop to visualize</p>";
   root.appendChild(dropOverlay);
 
-  // --- NEW: Landing screen ---
   const landing = document.createElement("div");
   landing.className = "landing";
   landing.innerHTML = `
@@ -36,9 +35,12 @@ function init() {
     <button type="button">Start</button>
   `;
   root.appendChild(landing);
-  // ---------------------------
 
   const prefs = loadPrefs();
+
+  // Apply saved custom colour to the custom theme before anything renders
+  if (prefs.customColor) applyCustomColor(prefs.customColor);
+
   let mode = MODES[prefs.modeIndex] || "spire";
   let source = "idle";
   let playing = false;
@@ -61,9 +63,17 @@ function init() {
     onFileSelected: handleFile,
     onFullscreenToggle: toggleFullscreen,
     onModeChange: (m) => { mode = m; prefs.modeIndex = MODES.indexOf(m); savePrefs(prefs); },
-    onThemeChange: (i) => { prefs.themeIndex = i; savePrefs(prefs); },
+    onThemeChange: (i) => { prefs.themeIndex = i; savePrefs(prefs); syncHud(); },
     onSensitivityChange: (v) => { prefs.sensitivity = v; savePrefs(prefs); },
     onVolumeChange: (v) => { prefs.volume = v; savePrefs(prefs); engine.setVolume(v); },
+    onCustomColorChange: (hex) => {
+      prefs.customColor = hex;
+      applyCustomColor(hex);
+      savePrefs(prefs);
+      // Auto-switch to the Custom theme when the user picks a colour
+      prefs.themeIndex = THEMES.findIndex((t) => t.id === "custom");
+      syncHud();
+    },
   });
 
   const ctx = canvas.getContext("2d");
@@ -115,24 +125,16 @@ function init() {
     requestAnimationFrame(tick);
   }
 
-  // --- NEW: Start logic ---
   let started = false;
   function start() {
     if (started) return;
     started = true;
     landing.classList.add("hidden");
-    // Resume audio context on user gesture (needed on iOS/Safari)
     try { engine.ensureContext(); } catch (e) {}
     requestAnimationFrame(tick);
   }
-
   landing.querySelector("button").addEventListener("click", start);
-
-  // Auto-start if the user drags and drops a file onto the landing screen
-  root.addEventListener("drop", (e) => {
-    if (!started) start();
-  }, { once: true });
-  // -------------------------
+  root.addEventListener("drop", () => { if (!started) start(); }, { once: true });
 
   function resetSourceState() {
     source = "idle";
@@ -189,6 +191,7 @@ function init() {
       themeIndex: prefs.themeIndex,
       sensitivity: prefs.sensitivity,
       volume: prefs.volume,
+      customColor: prefs.customColor,
     });
   }
 
@@ -206,7 +209,6 @@ function init() {
     else if (e.key === "Escape" && source !== "idle") { engine.stop(); resetSourceState(); syncHud(); }
   });
 
-  // Existing drag & drop logic (kept intact)
   root.addEventListener("dragover", (e) => {
     e.preventDefault();
     if (!dragOver) { dragOver = true; dropOverlay.style.display = "flex"; }
