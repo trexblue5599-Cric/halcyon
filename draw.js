@@ -1,9 +1,10 @@
 import { colorForEnergy } from "./themes.js";
 
 export function drawVisualizer(frame) {
-  const { ctx, width, height, theme } = frame;
-  ctx.fillStyle = theme.background;
-  ctx.fillRect(0, 0, width, height);
+  const { ctx, width, height } = frame;
+  // Clear instead of filling with theme.background,
+  // so the ambient background layer shows through.
+  ctx.clearRect(0, 0, width, height);
 
   if (frame.mode === "spire") drawSpire(frame);
   else if (frame.mode === "wave") drawWave(frame);
@@ -37,9 +38,7 @@ function drawSpire(frame) {
   ctx.shadowBlur = 0;
 }
 
-/* ===================== WAVE =====================
-   Mirrored smooth ribbon from the center.
-================================================== */
+/* ===================== WAVE ===================== */
 function drawWave(frame) {
   const { ctx, width, height, bars, theme } = frame;
   const n = bars.length;
@@ -105,10 +104,7 @@ function drawWave(frame) {
   ctx.shadowBlur = 0;
 }
 
-/* ===================== RINGS =====================
-   Concentric rings expanding outward from the center.
-   Inner rings react to bass, outer rings to treble.
-================================================== */
+/* ===================== RINGS ===================== */
 function drawRings(frame) {
   const { ctx, width, height, bars, theme } = frame;
   const n = bars.length;
@@ -120,7 +116,6 @@ function drawRings(frame) {
 
   const avg = average(bars);
 
-  // Center core glow
   ctx.beginPath();
   ctx.arc(cx, cy, minR * 0.9, 0, Math.PI * 2);
   ctx.fillStyle = colorForEnergy(theme, avg * 0.8);
@@ -131,7 +126,6 @@ function drawRings(frame) {
 
   for (let i = 0; i < ringCount; i++) {
     const t = i / ringCount;
-    // Lower bars (bass) → inner rings. Higher bars (treble) → outer rings.
     const barIdx = Math.floor(t * (bars.length - 1));
     const value = bars[barIdx] || 0;
 
@@ -148,18 +142,13 @@ function drawRings(frame) {
   }
   ctx.shadowBlur = 0;
 
-  // Pulsing core
   ctx.beginPath();
   ctx.arc(cx, cy, minR * 0.35 * (1 + avg * 1.5), 0, Math.PI * 2);
   ctx.fillStyle = colorForEnergy(theme, Math.min(1, avg * 1.6));
   ctx.fill();
 }
 
-/* ===================== PULSE =====================
-   One big circle that breathes with the bass.
-   Keeps a small history of past radii to draw a fading
-   "ghost trail" behind the current circle.
-================================================== */
+/* ===================== PULSE ===================== */
 const pulseHistory = [];
 
 function drawPulse(frame) {
@@ -167,7 +156,6 @@ function drawPulse(frame) {
   const cx = width / 2;
   const cy = height / 2;
 
-  // Bass = average of the lowest ~25% of bars
   const bassEnd = Math.max(1, Math.floor(bars.length * 0.25));
   let bass = 0;
   for (let i = 0; i < bassEnd; i++) bass += bars[i] || 0;
@@ -177,11 +165,9 @@ function drawPulse(frame) {
   const maxR = Math.min(width, height) * 0.42;
   const r = minR + bass * (maxR - minR);
 
-  // Push current radius into history (capped length)
   pulseHistory.push({ r, life: 1 });
   if (pulseHistory.length > 12) pulseHistory.shift();
 
-  // Draw ghost trail oldest → newest
   for (let i = 0; i < pulseHistory.length; i++) {
     const h = pulseHistory[i];
     const age = i / pulseHistory.length;
@@ -199,7 +185,6 @@ function drawPulse(frame) {
   }
   ctx.shadowBlur = 0;
 
-  // Filled core that breathes with bass
   const coreR = r * 0.85;
   const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR);
   grad.addColorStop(0, colorForEnergy(theme, Math.min(1, bass * 1.4)));
@@ -217,4 +202,4 @@ function average(values) {
   let sum = 0;
   for (let i = 0; i < values.length; i++) sum += values[i] || 0;
   return values.length ? sum / values.length : 0;
-      }
+}
